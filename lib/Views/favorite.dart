@@ -122,7 +122,8 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AgentDetailPage(agent: agent),
+                          builder: (context) => AgentDetailPage(
+                              representativeTier: agent, subTiers: []),
                         ),
                       ).then((_) => _loadFavorites());
                     },
