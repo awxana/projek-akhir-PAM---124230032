@@ -74,7 +74,7 @@ class _DashboardPageState extends State<DashboardPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Failed to fetch competitive tiers. Please try again later.',
+            'Failed to fetch competitive tiers. coba lagi nanti.',
             style: TextStyle(color: DashboardPage.valorantWhite),
           ),
           backgroundColor: DashboardPage.valorantPink,
@@ -84,7 +84,7 @@ class _DashboardPageState extends State<DashboardPage> {
           margin: const EdgeInsets.all(16),
         ),
       );
-      throw Exception('Failed to fetch competitive tiers');
+      throw Exception('Failed to fetch competitive tiers. coba lagi nanti.');
     }
   }
 
