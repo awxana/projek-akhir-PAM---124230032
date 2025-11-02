@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:projectakhir_mobile/Views/detail.dart';
+import 'package:projectakhir_mobile/Views/favorite_tiers.dart';
 
 class FavoriteAgentsPage extends StatefulWidget {
   const FavoriteAgentsPage({super.key});
@@ -9,18 +10,13 @@ class FavoriteAgentsPage extends StatefulWidget {
 }
 
 class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
-  late Future<List<dynamic>> _favoriteAgentsFuture;
+  late Future<List<dynamic>> _favoriteTiersFuture;
 
-  // Define Valorant-inspired colors for consistency
-  static const Color valorantRed = Color(0xFFFF4655);
-  static const Color valorantDarkBlue =
-      Color(0xFF0F1923); // A very dark blue, almost black
-  static const Color valorantGrey =
-      Color(0xFF272D38); // Dark grey for cards/background
-  static const Color valorantLightGrey =
-      Color(0xFFEFEFEF); // Off-white for text
-  static const Color valorantAccentYellow =
-      Color(0xFFFBEA2D); // Subtle accent (if needed)
+  // Menggunakan warna dari halaman lain agar konsisten
+  static const Color valoPink = Color(0xFFFF8FAB);
+  static const Color valoDark = Color(0xFF201628);
+  static const Color valoCard = Color(0xFF2A1E37);
+  static const Color valoText = Colors.white;
 
   @override
   void initState() {
@@ -29,38 +25,39 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
   }
 
   void _loadFavorites() {
-    _favoriteAgentsFuture = FavoriteAgents().getFavorites();
+    setState(() {
+      _favoriteTiersFuture = FavoriteTiers().getFavorites();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: valorantDarkBlue, // Main background
+      backgroundColor: valoDark, // Main background
       appBar: AppBar(
-        backgroundColor: valorantDarkBlue,
+        backgroundColor: valoDark,
         elevation: 0,
-        // UBAH DI SINI: Mengatur warna ikon dan teks foreground AppBar menjadi valorantLightGrey
-        foregroundColor: valorantLightGrey,
+        foregroundColor: valoText,
         title: const Text(
-          'FAVORITE AGENTS',
+          'FAVORITE TIERS',
           style: TextStyle(
             fontFamily: 'ValorantFont', // Custom font
-            color: valorantLightGrey,
+            color: valoText,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.5,
-            fontSize: 20,
+            fontSize: 22,
           ),
         ),
         centerTitle: true,
       ),
       body: FutureBuilder<List<dynamic>>(
-        future: _favoriteAgentsFuture,
+        future: _favoriteTiersFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(
-                    valorantRed), // Valorant Red indicator
+                    valoPink), // Valorant Red indicator
               ),
             );
           } else if (snapshot.hasError) {
@@ -69,7 +66,7 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                 'ERROR LOADING FAVORITES: ${snapshot.error}',
                 style: const TextStyle(
                   fontFamily: 'ValorantFont',
-                  color: valorantRed,
+                  color: valoPink,
                   fontSize: 16,
                 ),
                 textAlign: TextAlign.center,
@@ -81,16 +78,16 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
-                    Icons.bookmark_border, // Use the bookmark icon
-                    color: valorantGrey,
+                    Icons.favorite_border, // Use the bookmark icon
+                    color: valoCard,
                     size: 80,
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    'NO FAVORITE AGENTS YET',
+                    'NO FAVORITE TIERS YET',
                     style: TextStyle(
                       fontFamily: 'ValorantFont',
-                      color: valorantLightGrey,
+                      color: valoText,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
@@ -99,10 +96,10 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'Add agents to your favorites from their detail pages.',
+                    'Add tiers to your favorites from their detail pages.',
                     style: TextStyle(
                       fontFamily: 'ValorantFont',
-                      color: valorantLightGrey.withOpacity(0.7),
+                      color: valoText.withOpacity(0.7),
                       fontSize: 14,
                     ),
                     textAlign: TextAlign.center,
@@ -111,12 +108,12 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
               ),
             );
           } else {
-            List<dynamic> favoriteAgents = snapshot.data!;
+            List<dynamic> favoriteTiers = snapshot.data!;
             return ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: favoriteAgents.length,
+              itemCount: favoriteTiers.length,
               itemBuilder: (context, index) {
-                dynamic agent = favoriteAgents[index];
+                dynamic agent = favoriteTiers[index];
                 return Padding(
                   padding: const EdgeInsets.only(
                       bottom: 12.0), // Spacing between list tiles
@@ -127,18 +124,16 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                         MaterialPageRoute(
                           builder: (context) => AgentDetailPage(agent: agent),
                         ),
-                      ).then((_) =>
-                          _loadFavorites()); // Reload favorites when returning from detail page
+                      ).then((_) => _loadFavorites());
                     },
                     child: Card(
-                      color: valorantGrey, // Dark grey card background
+                      color: valoCard, // Dark grey card background
                       elevation: 6, // Subtle shadow
                       shape: RoundedRectangleBorder(
                         borderRadius:
                             BorderRadius.circular(12), // Rounded corners
                         side: BorderSide(
-                          color:
-                              valorantRed.withOpacity(0.4), // Subtle red border
+                          color: valoPink.withOpacity(0.4), // Subtle red border
                           width: 1.0,
                         ),
                       ),
@@ -149,7 +144,7 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                             ClipOval(
                               // Circular image for leading icon
                               child: Image.network(
-                                agent['displayIcon'] ?? '',
+                                agent['largeIcon'] ?? agent['smallIcon'] ?? '',
                                 width: 60,
                                 height: 60,
                                 fit: BoxFit.cover,
@@ -158,11 +153,11 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                                   width: 60,
                                   height: 60,
                                   decoration: const BoxDecoration(
-                                    color: valorantDarkBlue,
+                                    color: valoDark,
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(Icons.broken_image,
-                                      color: valorantRed, size: 30),
+                                      color: valoPink, size: 30),
                                 ),
                               ),
                             ),
@@ -172,13 +167,14 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    (agent['displayName'] ?? '').toUpperCase(),
+                                    (agent['tierName'] ?? 'Unknown Tier')
+                                        .toUpperCase(),
                                     style: const TextStyle(
                                       fontFamily: 'ValorantFont',
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                       color:
-                                          valorantRed, // Agent name in Valorant Red
+                                          valoPink, // Agent name in Valorant Red
                                       letterSpacing: 0.8,
                                     ),
                                     maxLines: 1,
@@ -186,28 +182,13 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    (agent['role'] != null
-                                            ? agent['role']['displayName']
-                                            : 'Unknown Role')
+                                    (agent['divisionName'] ??
+                                            'Unknown Division')
                                         .toUpperCase(),
                                     style: TextStyle(
                                       fontFamily: 'ValorantFont',
                                       fontSize: 14,
-                                      color: valorantLightGrey.withOpacity(
-                                          0.8), // Role in light grey
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    agent['description'] ??
-                                        'No description available.',
-                                    style: TextStyle(
-                                      fontFamily: 'ValorantFont',
-                                      fontSize: 12,
-                                      color: valorantLightGrey.withOpacity(
-                                          0.6), // Description in lighter grey
+                                      color: valoText.withOpacity(0.8),
                                     ),
                                     maxLines: 2, // Limit description to 2 lines
                                     overflow: TextOverflow.ellipsis,
