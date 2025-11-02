@@ -27,6 +27,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   List<dynamic> tiers = [];
+  List<dynamic> _fullTierList = []; // Simpan semua tier di sini
   List<dynamic> searchResults = [];
   bool isSearching = false;
 
@@ -62,12 +63,33 @@ class _DashboardPageState extends State<DashboardPage> {
       if (data != null && data.isNotEmpty) {
         final latestEpisode = data.last;
         setState(() {
-          // Filter tier yang tidak digunakan
-          tiers = latestEpisode['tiers']
+          // Simpan daftar lengkap untuk digunakan di halaman detail
+          List<dynamic> allTiers = latestEpisode['tiers']
               .where((tier) =>
                   tier['tierName'] != null &&
                   !tier['tierName'].toLowerCase().contains('unused'))
               .toList();
+
+          _fullTierList = allTiers;
+
+          // Kelompokkan tier berdasarkan nama dasar (misal: "Iron" dari "Iron 1")
+          // dan ambil satu perwakilan dari setiap kelompok.
+          Map<String, dynamic> uniqueTiersMap = {};
+          for (var tier in allTiers) {
+            String tierName = tier['tierName'];
+            // Ambil nama dasar (sebelum spasi pertama)
+            String baseName = tierName.split(' ').first;
+
+            // Simpan tier jika belum ada, atau jika yang sekarang punya largeIcon
+            // dan yang tersimpan belum. Ini untuk mendapatkan ikon terbaik.
+            if (!uniqueTiersMap.containsKey(baseName) ||
+                (uniqueTiersMap[baseName]?['largeIcon'] == null &&
+                    tier['largeIcon'] != null)) {
+              uniqueTiersMap[baseName] = tier;
+            }
+          }
+
+          tiers = uniqueTiersMap.values.toList();
         });
       }
     } else {
@@ -123,8 +145,19 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void navigateToDetailPage(dynamic tier) {
-    _pushWithFade(
-        AgentDetailPage(agent: tier)); // 'agent' prop now holds tier data
+    // Ambil nama dasar dari tier yang diklik (misal: "Bronze")
+    final baseName = (tier['tierName'] as String? ?? '').split(' ').first;
+
+    // Filter daftar tier lengkap untuk mendapatkan semua sub-tier yang cocok
+    final subTiers = _fullTierList
+        .where((t) => (t['tierName'] as String? ?? '').startsWith(baseName))
+        .toList();
+
+    // Kirim tier perwakilan dan daftar sub-tier ke halaman detail
+    _pushWithFade(AgentDetailPage(
+      representativeTier: tier,
+      subTiers: subTiers,
+    ));
   }
 
   void navigateToFavoriteAgentsPage() {
@@ -534,7 +567,10 @@ class _DashboardPageState extends State<DashboardPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            tier['tierName']?.toUpperCase() ?? '',
+                            (tier['tierName'] as String? ?? '')
+                                .split(' ')
+                                .first
+                                .toUpperCase(),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: DashboardPage.valorantPink,
@@ -547,7 +583,8 @@ class _DashboardPageState extends State<DashboardPage> {
                           const SizedBox(height: 3),
                           Text(
                             (tier['divisionName'] ?? '--')
-                                .toString()
+                                .split(' ')
+                                .first
                                 .toUpperCase(),
                             style: TextStyle(
                               color:
