@@ -26,7 +26,7 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  List<dynamic> agents = [];
+  List<dynamic> tiers = [];
   List<dynamic> searchResults = [];
   bool isSearching = false;
 
@@ -39,7 +39,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _initialSetup();
-    fetchAgents();
+    fetchTiers();
   }
 
   void _initialSetup() async {
@@ -53,42 +53,48 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  Future<void> fetchAgents() async {
+  Future<void> fetchTiers() async {
     final response = await http
-        .get(Uri.parse('https://valorant-api.com/v1/agents?isPlayableCharacter=true'));
+        .get(Uri.parse('https://valorant-api.com/v1/competitivetiers'));
     if (response.statusCode == 200) {
-      setState(() {
-        agents = json.decode(response.body)['data'];
-      });
+      final data = json.decode(response.body)['data'];
+      // Ambil episode terakhir (yang paling relevan)
+      if (data != null && data.isNotEmpty) {
+        final latestEpisode = data.last;
+        setState(() {
+          // Filter tier yang tidak digunakan
+          tiers = latestEpisode['tiers']
+              .where((tier) =>
+                  tier['tierName'] != null &&
+                  !tier['tierName'].toLowerCase().contains('unused'))
+              .toList();
+        });
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Failed to fetch agents. Please try again later.',
+            'Failed to fetch competitive tiers. Please try again later.',
             style: TextStyle(color: DashboardPage.valorantWhite),
           ),
           backgroundColor: DashboardPage.valorantPink,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.all(16),
         ),
       );
-      throw Exception('Failed to fetch agents');
+      throw Exception('Failed to fetch competitive tiers');
     }
   }
 
-  void searchAgents(String query) {
+  void searchTiers(String query) {
     setState(() {
       if (query.isNotEmpty) {
         isSearching = true;
-        searchResults = agents.where((agent) {
-          return agent['displayName']
-                  .toLowerCase()
-                  .contains(query.toLowerCase()) ||
-              (agent['role'] != null &&
-                  agent['role']['displayName']
-                      .toLowerCase()
-                      .contains(query.toLowerCase()));
+        searchResults = tiers.where((tier) {
+          final tierName = tier['tierName'] as String? ?? '';
+          return tierName.toLowerCase().contains(query.toLowerCase());
         }).toList();
       } else {
         isSearching = false;
@@ -116,8 +122,9 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  void navigateToDetailPage(dynamic agent) {
-    _pushWithFade(AgentDetailPage(agent: agent));
+  void navigateToDetailPage(dynamic tier) {
+    _pushWithFade(
+        AgentDetailPage(agent: tier)); // 'agent' prop now holds tier data
   }
 
   void navigateToFavoriteAgentsPage() {
@@ -189,8 +196,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     width: 42,
                     height: 5,
                     decoration: BoxDecoration(
-                      color: DashboardPage.valorantWhite
-                          .withValues(alpha: 0.35),
+                      color:
+                          DashboardPage.valorantWhite.withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
@@ -267,7 +274,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 const SizedBox(width: 10),
                 const Text(
-                  'VALORANT AGENTS',
+                  'VALORANT TIERS',
                   style: TextStyle(
                     color: DashboardPage.valorantWhite,
                     fontWeight: FontWeight.bold,
@@ -293,7 +300,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: agents.isEmpty
+      body: tiers.isEmpty
           ? const Center(
               child: CircularProgressIndicator(
                 valueColor:
@@ -306,14 +313,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: TextField(
-                    onChanged: searchAgents,
-                    style: const TextStyle(
-                        color: DashboardPage.valorantWhite),
+                    onChanged: searchTiers,
+                    style: const TextStyle(color: DashboardPage.valorantWhite),
                     decoration: InputDecoration(
-                      hintText: 'Search agent by name or role...',
+                      hintText: 'Search tier by name...',
                       hintStyle: TextStyle(
-                        color: DashboardPage.valorantWhite
-                            .withValues(alpha: 0.5),
+                        color:
+                            DashboardPage.valorantWhite.withValues(alpha: 0.5),
                       ),
                       prefixIcon: const Icon(Icons.search,
                           color: DashboardPage.valorantPink),
@@ -326,8 +332,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide(
-                          color: DashboardPage.valorantPink
-                              .withValues(alpha: 0.3),
+                          color:
+                              DashboardPage.valorantPink.withValues(alpha: 0.3),
                           width: 1.0,
                         ),
                       ),
@@ -357,17 +363,15 @@ class _DashboardPageState extends State<DashboardPage> {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              DashboardPage.valorantDark
-                                  .withValues(alpha: 0.2),
-                              DashboardPage.valorantDark
-                                  .withValues(alpha: 0.9),
+                              DashboardPage.valorantDark.withValues(alpha: 0.2),
+                              DashboardPage.valorantDark.withValues(alpha: 0.9),
                             ],
                           ),
                         ),
                       ),
                       isSearching
-                          ? _buildAgentGrid(searchResults)
-                          : _buildAgentGrid(agents),
+                          ? _buildTierGrid(searchResults)
+                          : _buildTierGrid(tiers),
                     ],
                   ),
                 ),
@@ -430,11 +434,11 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildAgentGrid(List<dynamic> agentList) {
-    if (agentList.isEmpty && isSearching) {
+  Widget _buildTierGrid(List<dynamic> tierList) {
+    if (tierList.isEmpty && isSearching) {
       return const Center(
         child: Text(
-          'NO AGENTS FOUND',
+          'NO TIERS FOUND',
           style: TextStyle(
             color: DashboardPage.valorantWhite,
             fontSize: 16,
@@ -442,11 +446,10 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ),
       );
-    } else if (agentList.isEmpty && !isSearching) {
+    } else if (tierList.isEmpty && !isSearching) {
       return const Center(
         child: CircularProgressIndicator(
-          valueColor:
-              AlwaysStoppedAnimation<Color>(DashboardPage.valorantPink),
+          valueColor: AlwaysStoppedAnimation<Color>(DashboardPage.valorantPink),
         ),
       );
     }
@@ -460,9 +463,9 @@ class _DashboardPageState extends State<DashboardPage> {
         // 👉 bikin kartu LEBIH TINGGI dikiiit, biar gak overflow
         childAspectRatio: 0.78,
       ),
-      itemCount: agentList.length,
+      itemCount: tierList.length,
       itemBuilder: (context, index) {
-        final agent = agentList[index];
+        final tier = tierList[index];
 
         return TweenAnimationBuilder<double>(
           tween: Tween(begin: 0, end: 1),
@@ -478,17 +481,15 @@ class _DashboardPageState extends State<DashboardPage> {
             );
           },
           child: GestureDetector(
-            onTap: () => navigateToDetailPage(agent),
+            onTap: () => navigateToDetailPage(tier),
             child: Card(
               color: DashboardPage.valorantCard,
               elevation: 8,
-              shadowColor:
-                  DashboardPage.valorantPink.withValues(alpha: 0.4),
+              shadowColor: DashboardPage.valorantPink.withValues(alpha: 0.4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
                 side: BorderSide(
-                  color:
-                      DashboardPage.valorantPink.withValues(alpha: 0.35),
+                  color: DashboardPage.valorantPink.withValues(alpha: 0.35),
                   width: 1.2,
                 ),
               ),
@@ -502,7 +503,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     child: Container(
                       color: Colors.black12,
                       child: Image.network(
-                        agent['displayIcon'],
+                        tier['largeIcon'] ?? tier['smallIcon'] ?? '',
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const Center(
@@ -523,8 +524,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         vertical: 6, // 👉 dikurangin biar nggak overflow
                       ),
                       decoration: BoxDecoration(
-                        color: DashboardPage.valorantCard
-                            .withValues(alpha: 0.85),
+                        color:
+                            DashboardPage.valorantCard.withValues(alpha: 0.85),
                         borderRadius: const BorderRadius.vertical(
                             bottom: Radius.circular(18)),
                       ),
@@ -533,7 +534,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            agent['displayName']?.toUpperCase() ?? '',
+                            tier['tierName']?.toUpperCase() ?? '',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: DashboardPage.valorantPink,
@@ -545,12 +546,12 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            (agent['role']?['displayName'] ?? '--')
+                            (tier['divisionName'] ?? '--')
                                 .toString()
                                 .toUpperCase(),
                             style: TextStyle(
-                              color: DashboardPage.valorantWhite
-                                  .withValues(alpha: 0.8),
+                              color:
+                                  DashboardPage.valorantWhite.withOpacity(0.8),
                               fontSize: 11.5,
                             ),
                             maxLines: 1,
