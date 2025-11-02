@@ -8,6 +8,7 @@ import 'package:projectakhir_mobile/Views/detail.dart';
 import 'package:projectakhir_mobile/Views/favorite.dart';
 import 'package:projectakhir_mobile/Views/login_screen.dart';
 import 'package:projectakhir_mobile/Views/sarankesan.dart';
+import 'package:projectakhir_mobile/Views/merch.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -16,24 +17,18 @@ class DashboardPage extends StatefulWidget {
   @override
   _DashboardPageState createState() => _DashboardPageState();
 
-  // warna baru – vibes feminim
   static const Color valorantPink = Color(0xFFFF8FAB);
   static const Color valorantDark = Color(0xFF201628);
   static const Color valorantCard = Color(0xFF2A1E37);
-  static const Color valorantSoft = Color(0xFFFDE2E4);
-  static const Color valorantAccent = Color(0xFFBDE0FE);
   static const Color valorantWhite = Color(0xFFFFFFFF);
 }
 
 class _DashboardPageState extends State<DashboardPage> {
   List<dynamic> tiers = [];
-  List<dynamic> _fullTierList = []; // Simpan semua tier di sini
+  List<dynamic> _fullTierList = [];
   List<dynamic> searchResults = [];
   bool isSearching = false;
-
   late SharedPreferences prefs;
-
-  // timezone user
   List<String> selectedTimezones = ['WIB', 'WITA', 'WIT', 'LONDON'];
 
   @override
@@ -45,7 +40,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _initialSetup() async {
     prefs = await SharedPreferences.getInstance();
-
     final saved = prefs.getStringList('selected_timezones');
     if (saved != null && saved.isNotEmpty) {
       setState(() {
@@ -59,11 +53,9 @@ class _DashboardPageState extends State<DashboardPage> {
         .get(Uri.parse('https://valorant-api.com/v1/competitivetiers'));
     if (response.statusCode == 200) {
       final data = json.decode(response.body)['data'];
-      // Ambil episode terakhir (yang paling relevan)
       if (data != null && data.isNotEmpty) {
         final latestEpisode = data.last;
         setState(() {
-          // Simpan daftar lengkap untuk digunakan di halaman detail
           List<dynamic> allTiers = latestEpisode['tiers']
               .where((tier) =>
                   tier['tierName'] != null &&
@@ -71,24 +63,16 @@ class _DashboardPageState extends State<DashboardPage> {
               .toList();
 
           _fullTierList = allTiers;
-
-          // Kelompokkan tier berdasarkan nama dasar (misal: "Iron" dari "Iron 1")
-          // dan ambil satu perwakilan dari setiap kelompok.
           Map<String, dynamic> uniqueTiersMap = {};
           for (var tier in allTiers) {
             String tierName = tier['tierName'];
-            // Ambil nama dasar (sebelum spasi pertama)
             String baseName = tierName.split(' ').first;
-
-            // Simpan tier jika belum ada, atau jika yang sekarang punya largeIcon
-            // dan yang tersimpan belum. Ini untuk mendapatkan ikon terbaik.
             if (!uniqueTiersMap.containsKey(baseName) ||
                 (uniqueTiersMap[baseName]?['largeIcon'] == null &&
                     tier['largeIcon'] != null)) {
               uniqueTiersMap[baseName] = tier;
             }
           }
-
           tiers = uniqueTiersMap.values.toList();
         });
       }
@@ -96,17 +80,12 @@ class _DashboardPageState extends State<DashboardPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Failed to fetch competitive tiers. coba lagi nanti.',
+            'Failed to fetch competitive tiers. Coba lagi nanti.',
             style: TextStyle(color: DashboardPage.valorantWhite),
           ),
           backgroundColor: DashboardPage.valorantPink,
-          behavior: SnackBarBehavior.floating,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(16),
         ),
       );
-      throw Exception('Failed to fetch competitive tiers. coba lagi nanti.');
     }
   }
 
@@ -125,7 +104,6 @@ class _DashboardPageState extends State<DashboardPage> {
     });
   }
 
-  // animasi fade
   void _pushWithFade(Widget page) {
     Navigator.push(
       context,
@@ -145,46 +123,31 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   void navigateToDetailPage(dynamic tier) {
-    // Ambil nama dasar dari tier yang diklik (misal: "Bronze")
     final baseName = (tier['tierName'] as String? ?? '').split(' ').first;
-
-    // Filter daftar tier lengkap untuk mendapatkan semua sub-tier yang cocok
     final subTiers = _fullTierList
         .where((t) => (t['tierName'] as String? ?? '').startsWith(baseName))
         .toList();
-
-    // Kirim tier perwakilan dan daftar sub-tier ke halaman detail
     _pushWithFade(AgentDetailPage(
       representativeTier: tier,
       subTiers: subTiers,
     ));
   }
 
-  void navigateToFavoriteAgentsPage() {
-    _pushWithFade(const FavoriteAgentsPage());
-  }
-
-  void navigateToProfilePage() {
-    _pushWithFade(const ProfilePage());
-  }
-
-  void navigateToFeedbackPage() {
-    _pushWithFade(const FeedbackPage());
-  }
+  void navigateToFavoriteAgentsPage() => _pushWithFade(const FavoriteAgentsPage());
+  void navigateToProfilePage() => _pushWithFade(const ProfilePage());
+  void navigateToFeedbackPage() => _pushWithFade(const FeedbackPage());
+  void navigateToMerchPage() => _pushWithFade(const MerchPage());
 
   void navigateToLogout() async {
     await prefs.remove("username");
     if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
       (route) => false,
     );
   }
 
-  // bottom sheet timezone
   void _openTimezonePicker() async {
     final result = await showModalBottomSheet<List<String>>(
       context: context,
@@ -208,13 +171,10 @@ class _DashboardPageState extends State<DashboardPage> {
                     }
                   });
                 },
-                title: Text(
-                  label,
-                  style: const TextStyle(
-                    color: DashboardPage.valorantWhite,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                title: Text(label,
+                    style: const TextStyle(
+                        color: DashboardPage.valorantWhite,
+                        fontWeight: FontWeight.w600)),
                 activeColor: DashboardPage.valorantPink,
                 checkColor: DashboardPage.valorantWhite,
               );
@@ -225,23 +185,12 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 42,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color:
-                          DashboardPage.valorantWhite.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
                   const Text(
                     'Pilih Zona Waktu',
                     style: TextStyle(
-                      color: DashboardPage.valorantWhite,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                        color: DashboardPage.valorantWhite,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   buildCheckbox('WIB'),
@@ -249,28 +198,22 @@ class _DashboardPageState extends State<DashboardPage> {
                   buildCheckbox('WIT'),
                   buildCheckbox('LONDON'),
                   const SizedBox(height: 14),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: DashboardPage.valorantPink,
-                        minimumSize: const Size.fromHeight(42),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context, tempSelected);
-                      },
-                      child: const Text(
-                        'SIMPAN',
-                        style: TextStyle(
-                          color: DashboardPage.valorantWhite,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: DashboardPage.valorantPink,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                  )
+                    onPressed: () => Navigator.pop(context, tempSelected),
+                    child: const Text(
+                      'SIMPAN',
+                      style: TextStyle(
+                        color: DashboardPage.valorantWhite,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -281,7 +224,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
     if (result != null) {
       final nonEmptyResult = result.isEmpty ? ['WIB'] : result;
-
       setState(() {
         selectedTimezones = nonEmptyResult;
       });
@@ -309,21 +251,17 @@ class _DashboardPageState extends State<DashboardPage> {
                 const Text(
                   'VALORANT TIERS',
                   style: TextStyle(
-                    color: DashboardPage.valorantWhite,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
-                    fontSize: 20,
-                  ),
+                      color: DashboardPage.valorantWhite,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      fontSize: 20),
                 ),
               ],
             ),
-            ValorantTimeDisplay(
-              selectedTimezones: selectedTimezones,
-            ),
+            ValorantTimeDisplay(selectedTimezones: selectedTimezones),
           ],
         ),
         backgroundColor: DashboardPage.valorantDark,
-        elevation: 0,
         actions: [
           IconButton(
             onPressed: _openTimezonePicker,
@@ -331,18 +269,21 @@ class _DashboardPageState extends State<DashboardPage> {
                 color: DashboardPage.valorantWhite),
             tooltip: 'Pilih zona waktu',
           ),
+          IconButton(
+            onPressed: navigateToMerchPage,
+            icon: const Icon(Icons.shopping_bag,
+                color: DashboardPage.valorantPink),
+            tooltip: 'Lihat Merchandise',
+          ),
         ],
       ),
       body: tiers.isEmpty
           ? const Center(
               child: CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(DashboardPage.valorantPink),
-              ),
-            )
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      DashboardPage.valorantPink)))
           : Column(
               children: [
-                // search bar
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: TextField(
@@ -362,89 +303,30 @@ class _DashboardPageState extends State<DashboardPage> {
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide(
-                          color:
-                              DashboardPage.valorantPink.withValues(alpha: 0.3),
-                          width: 1.0,
-                        ),
-                      ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(30)),
-                        borderSide: BorderSide(
-                            color: DashboardPage.valorantPink, width: 1.5),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 14, horizontal: 20),
                     ),
                   ),
                 ),
                 Expanded(
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: Image.asset(
-                          'assets/valobackground.jpg',
-                          fit: BoxFit.cover,
-                          opacity: const AlwaysStoppedAnimation(0.15),
-                        ),
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              DashboardPage.valorantDark.withValues(alpha: 0.2),
-                              DashboardPage.valorantDark.withValues(alpha: 0.9),
-                            ],
-                          ),
-                        ),
-                      ),
-                      isSearching
-                          ? _buildTierGrid(searchResults)
-                          : _buildTierGrid(tiers),
-                    ],
-                  ),
+                  child:
+                      isSearching ? _buildTierGrid(searchResults) : _buildTierGrid(tiers),
                 ),
               ],
             ),
       bottomNavigationBar: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(18),
-          topRight: Radius.circular(18),
-        ),
+        borderRadius:
+            const BorderRadius.only(topLeft: Radius.circular(18), topRight: Radius.circular(18)),
         child: BottomNavigationBar(
           backgroundColor: DashboardPage.valorantCard,
           selectedItemColor: DashboardPage.valorantPink,
           unselectedItemColor:
               DashboardPage.valorantWhite.withValues(alpha: 0.5),
           type: BottomNavigationBarType.fixed,
-          selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 11,
-          ),
           items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite),
-              label: 'FAVORITES',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'PROFILE',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.notes),
-              label: 'FEEDBACK',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.logout),
-              label: 'LOGOUT',
-            ),
+            BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'FAVORITES'),
+            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: 'MERCH'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'PROFILE'),
+            BottomNavigationBarItem(icon: Icon(Icons.notes), label: 'FEEDBACK'),
+            BottomNavigationBarItem(icon: Icon(Icons.logout), label: 'LOGOUT'),
           ],
           onTap: (index) {
             switch (index) {
@@ -452,12 +334,15 @@ class _DashboardPageState extends State<DashboardPage> {
                 navigateToFavoriteAgentsPage();
                 break;
               case 1:
-                navigateToProfilePage();
+                navigateToMerchPage();
                 break;
               case 2:
-                navigateToFeedbackPage();
+                navigateToProfilePage();
                 break;
               case 3:
+                navigateToFeedbackPage();
+                break;
+              case 4:
                 navigateToLogout();
                 break;
             }
@@ -468,22 +353,10 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildTierGrid(List<dynamic> tierList) {
-    if (tierList.isEmpty && isSearching) {
+    if (tierList.isEmpty) {
       return const Center(
-        child: Text(
-          'NO TIERS FOUND',
-          style: TextStyle(
-            color: DashboardPage.valorantWhite,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      );
-    } else if (tierList.isEmpty && !isSearching) {
-      return const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(DashboardPage.valorantPink),
-        ),
+        child: Text('NO TIERS FOUND',
+            style: TextStyle(color: DashboardPage.valorantWhite)),
       );
     }
 
@@ -493,113 +366,42 @@ class _DashboardPageState extends State<DashboardPage> {
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        // 👉 bikin kartu LEBIH TINGGI dikiiit, biar gak overflow
         childAspectRatio: 0.78,
       ),
       itemCount: tierList.length,
       itemBuilder: (context, index) {
         final tier = tierList[index];
-
-        return TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: 1),
-          duration: Duration(milliseconds: 350 + (index * 40)),
-          curve: Curves.easeOut,
-          builder: (context, value, child) {
-            return Opacity(
-              opacity: value,
-              child: Transform.translate(
-                offset: Offset(0, 20 * (1 - value)),
-                child: child,
-              ),
-            );
-          },
-          child: GestureDetector(
-            onTap: () => navigateToDetailPage(tier),
-            child: Card(
-              color: DashboardPage.valorantCard,
-              elevation: 8,
-              shadowColor: DashboardPage.valorantPink.withValues(alpha: 0.4),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-                side: BorderSide(
-                  color: DashboardPage.valorantPink.withValues(alpha: 0.35),
-                  width: 1.2,
+        return GestureDetector(
+          onTap: () => navigateToDetailPage(tier),
+          child: Card(
+            color: DashboardPage.valorantCard,
+            elevation: 8,
+            child: Column(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Image.network(
+                    tier['largeIcon'] ?? tier['smallIcon'] ?? '',
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Center(child: Icon(Icons.broken_image)),
+                  ),
                 ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // gambar
-                  Expanded(
-                    flex: 3,
-                    child: Container(
-                      color: Colors.black12,
-                      child: Image.network(
-                        tier['largeIcon'] ?? tier['smallIcon'] ?? '',
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Center(
-                          child: Icon(
-                            Icons.broken_image,
-                            color: DashboardPage.valorantPink,
-                          ),
-                        ),
-                      ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    alignment: Alignment.center,
+                    color:
+                        DashboardPage.valorantCard.withValues(alpha: 0.85),
+                    child: Text(
+                      (tier['tierName'] as String? ?? '').toUpperCase(),
+                      style: const TextStyle(
+                          color: DashboardPage.valorantPink,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
-                  // info bawah
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6, // 👉 dikurangin biar nggak overflow
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            DashboardPage.valorantCard.withValues(alpha: 0.85),
-                        borderRadius: const BorderRadius.vertical(
-                            bottom: Radius.circular(18)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            (tier['tierName'] as String? ?? '')
-                                .split(' ')
-                                .first
-                                .toUpperCase(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: DashboardPage.valorantPink,
-                              fontSize: 14.5,
-                              letterSpacing: 0.6,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            (tier['divisionName'] ?? '--')
-                                .split(' ')
-                                .first
-                                .toUpperCase(),
-                            style: TextStyle(
-                              color:
-                                  DashboardPage.valorantWhite.withOpacity(0.8),
-                              fontSize: 11.5,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -608,13 +410,10 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
-/// Widget penampil waktu dinamis
+/// Widget waktu dinamis
 class ValorantTimeDisplay extends StatefulWidget {
   final List<String> selectedTimezones;
-  const ValorantTimeDisplay({
-    super.key,
-    required this.selectedTimezones,
-  });
+  const ValorantTimeDisplay({super.key, required this.selectedTimezones});
 
   @override
   State<ValorantTimeDisplay> createState() => _ValorantTimeDisplayState();
@@ -653,17 +452,12 @@ class _ValorantTimeDisplayState extends State<ValorantTimeDisplay> {
   @override
   Widget build(BuildContext context) {
     final times = _currentTimes();
-
-    if (widget.selectedTimezones.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
+    if (widget.selectedTimezones.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 4),
       child: Row(
         children: [
-          const Icon(Icons.access_time,
-              color: DashboardPage.valorantPink, size: 14),
+          const Icon(Icons.access_time, color: DashboardPage.valorantPink, size: 14),
           const SizedBox(width: 6),
           Expanded(
             child: SingleChildScrollView(
@@ -677,7 +471,6 @@ class _ValorantTimeDisplayState extends State<ValorantTimeDisplay> {
                       style: const TextStyle(
                         color: DashboardPage.valorantWhite,
                         fontSize: 12,
-                        letterSpacing: 1.1,
                       ),
                     ),
                   );

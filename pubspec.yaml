@@ -80,6 +80,14 @@ flutter:
     - assets/valorant-logo.png
     - assets/valobackground.jpg
     - assets/profil.jpg
+    - assets/hoodie.png
+    - assets/mousepad.png
+    - assets/tshirt.png
+    - assets/keychain.jpg
+    - assets/cap.jpg
+    - assets/mug.jpg
+    - assets/poster.jpg
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
