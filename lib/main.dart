@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:provider/provider.dart';
 import 'package:projectakhir_mobile/Models/user.dart';
+import 'package:projectakhir_mobile/Models/cart_manager.dart';
 import 'package:projectakhir_mobile/Views/login_screen.dart';
 
 String boxName = 'USER';
@@ -19,10 +21,13 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Valorant App',
-      home: LoginScreen(),
+    return ChangeNotifierProvider(
+      create: (_) => CartManager(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Valorant App',
+        home: const LoginScreen(),
+      ),
     );
   }
 }

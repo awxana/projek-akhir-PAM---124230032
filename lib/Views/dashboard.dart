@@ -78,8 +78,8 @@ class _DashboardPageState extends State<DashboardPage> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
+        const SnackBar(
+          content: Text(
             'Failed to fetch competitive tiers. Coba lagi nanti.',
             style: TextStyle(color: DashboardPage.valorantWhite),
           ),
@@ -269,12 +269,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 color: DashboardPage.valorantWhite),
             tooltip: 'Pilih zona waktu',
           ),
-          IconButton(
-            onPressed: navigateToMerchPage,
-            icon: const Icon(Icons.shopping_bag,
-                color: DashboardPage.valorantPink),
-            tooltip: 'Lihat Merchandise',
-          ),
+         
         ],
       ),
       body: tiers.isEmpty

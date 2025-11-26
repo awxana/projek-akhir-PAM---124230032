@@ -84,8 +84,7 @@ class FeedbackPage extends StatelessWidget {
                   title: 'Saran',
                   subtitle: 'Untuk saran kedepannya 🛠️',
                   points: const [
-                    '• Boleh yah ya pak buat banyakin latihan dan penjelasannya untuk matkul mobile hehe.',
-                    '• SPADA tolong ada dark mode, mata saya bukan granat flash 🥲.',
+                    '• Boleh yah ya pak buat banyakin latihan dan penjelasannya untuk matkul mobile agar kami lebih paham dan jago di matkul ini.',
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -95,7 +94,7 @@ class FeedbackPage extends StatelessWidget {
                   title: 'Kesan',
                   subtitle: 'Yang dirasain selama Mobile 💪',
                   points: const [
-                    '• duh.. tugas ini sangat membuat saya mendekatkan diri kepada Tuhan.',
+                    '• jujur tugas ini sangat membuat saya mendekatkan diri kepada Tuhan.',
                     '• Overall: seru, menantang, layak direkomendasikan (asal tugasnya dikit).',
                   ],
                 ),

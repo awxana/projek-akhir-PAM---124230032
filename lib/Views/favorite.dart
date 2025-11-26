@@ -123,7 +123,7 @@ class _FavoriteAgentsPageState extends State<FavoriteAgentsPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => AgentDetailPage(
-                              representativeTier: agent, subTiers: []),
+                              representativeTier: agent, subTiers: const []),
                         ),
                       ).then((_) => _loadFavorites());
                     },
