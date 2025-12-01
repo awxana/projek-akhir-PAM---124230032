@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../data/merch_data.dart';
 import '../Models/cart_manager.dart';
 import 'cart_page.dart'; // Import CartPage
+import 'favorite_merch.dart';
 
 class MerchPage extends StatefulWidget {
   const MerchPage({super.key});
@@ -28,6 +29,9 @@ class _MerchPageState extends State<MerchPage> {
     'KWD': 0.31,
   };
   String selectedCurrency = 'IDR';
+
+  // Set of favorite merch ids
+  Set<String> _favoriteIds = {};
 
   // Helper function untuk konversi dan format mata uang
   String _formatCurrency(double amountUsd) {
@@ -65,6 +69,21 @@ class _MerchPageState extends State<MerchPage> {
       context,
       MaterialPageRoute(builder: (context) => const CartPage()),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    final favs = await FavoriteMerch().getFavorites();
+    if (mounted) {
+      setState(() {
+        _favoriteIds = favs.toSet();
+      });
+    }
   }
 
   @override
@@ -160,6 +179,7 @@ class _MerchPageState extends State<MerchPage> {
         itemBuilder: (context, index) {
           final merch = merchList[index];
           final convertedPrice = _formatCurrency(merch.priceUsd);
+          final isFav = _favoriteIds.contains(merch.id);
 
           return Card(
             color: valorantCard.withOpacity(0.95),
@@ -226,12 +246,45 @@ class _MerchPageState extends State<MerchPage> {
                       ],
                     ),
                   ),
-                  // Tombol Add to Cart
-                  IconButton(
-                    onPressed: () => addToCartProvider(merch),
-                    icon: const Icon(Icons.add_shopping_cart,
-                        color: valorantPink, size: 20),
-                    tooltip: 'Tambahkan ke Keranjang',
+                  // Favorite + Add to Cart buttons
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        onPressed: () async {
+                          await FavoriteMerch().toggle(merch.id);
+                          setState(() {
+                            if (_favoriteIds.contains(merch.id)) {
+                              _favoriteIds.remove(merch.id);
+                            } else {
+                              _favoriteIds.add(merch.id);
+                            }
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(isFav
+                                  ? '${merch.name} dihapus dari favorit'
+                                  : '${merch.name} ditambahkan ke favorit'),
+                              duration: const Duration(seconds: 1),
+                              backgroundColor: valorantPink.withOpacity(0.8),
+                            ),
+                          );
+                        },
+                        icon: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? valorantPink : valorantWhite,
+                          size: 20,
+                        ),
+                        tooltip: isFav ? 'Hapus Favorit' : 'Tambahkan Favorit',
+                      ),
+                      IconButton(
+                        onPressed: () => addToCartProvider(merch),
+                        icon: const Icon(Icons.add_shopping_cart,
+                            color: valorantPink, size: 20),
+                        tooltip: 'Tambahkan ke Keranjang',
+                      ),
+                    ],
                   ),
                 ],
               ),

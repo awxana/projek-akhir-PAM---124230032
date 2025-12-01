@@ -84,7 +84,7 @@ class FeedbackPage extends StatelessWidget {
                   title: 'Saran',
                   subtitle: 'Untuk saran kedepannya 🛠️',
                   points: const [
-                    '• Boleh yah ya pak buat banyakin latihan dan penjelasannya untuk matkul mobile agar kami lebih paham dan jago di matkul ini.',
+                    '• mungkin saran dari saya,banyakin latihan dan penjelasannya untuk matkul mobile agar kami lebih paham dan jago di matkul ini pak hehe.',
                   ],
                 ),
                 const SizedBox(height: 16),
