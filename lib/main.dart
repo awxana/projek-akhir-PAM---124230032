@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:projectakhir_mobile/Models/user.dart';
 import 'package:projectakhir_mobile/Models/cart_manager.dart';
 import 'package:projectakhir_mobile/Views/login_screen.dart';
+import 'services/notification_controller.dart';
 
 String boxName = 'USER';
 
@@ -12,6 +13,14 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter<UserModel>(UserModelAdapter());
   await Hive.openBox<UserModel>(boxName);
+
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inisialisasi Awesome Notifications
+  await NotificationController.initializeLocalNotifications();
+  
+  // Set Listeners (untuk handle tap notifikasi saat app running/background)
+  await NotificationController.startListeningNotificationEvents();
   runApp(const MyApp());
 }
 

@@ -10,6 +10,7 @@ import 'package:projectakhir_mobile/Views/login_screen.dart';
 import 'package:projectakhir_mobile/Views/sarankesan.dart';
 import 'package:projectakhir_mobile/Views/merch.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/notification_controller.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -35,6 +36,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _initialSetup();
+    NotificationController.startListeningNotificationEvents();
     fetchTiers();
   }
 
@@ -133,7 +135,8 @@ class _DashboardPageState extends State<DashboardPage> {
     ));
   }
 
-  void navigateToFavoriteAgentsPage() => _pushWithFade(const FavoriteAgentsPage());
+  void navigateToFavoriteAgentsPage() =>
+      _pushWithFade(const FavoriteAgentsPage());
   void navigateToProfilePage() => _pushWithFade(const ProfilePage());
   void navigateToFeedbackPage() => _pushWithFade(const FeedbackPage());
   void navigateToMerchPage() => _pushWithFade(const MerchPage());
@@ -269,7 +272,6 @@ class _DashboardPageState extends State<DashboardPage> {
                 color: DashboardPage.valorantWhite),
             tooltip: 'Pilih zona waktu',
           ),
-         
         ],
       ),
       body: tiers.isEmpty
@@ -302,14 +304,29 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 Expanded(
-                  child:
-                      isSearching ? _buildTierGrid(searchResults) : _buildTierGrid(tiers),
+                  child: isSearching
+                      ? _buildTierGrid(searchResults)
+                      : _buildTierGrid(tiers),
+                ),
+                
+                const SizedBox(height: 20),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.notifications_active),
+                  label: const Text("Kirim Notifikasi Promo"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    // PANGGIL FUNGSI DISINI
+                    NotificationController.createNewNotification();
+                  },
                 ),
               ],
             ),
       bottomNavigationBar: ClipRRect(
-        borderRadius:
-            const BorderRadius.only(topLeft: Radius.circular(18), topRight: Radius.circular(18)),
+        borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(18), topRight: Radius.circular(18)),
         child: BottomNavigationBar(
           backgroundColor: DashboardPage.valorantCard,
           selectedItemColor: DashboardPage.valorantPink,
@@ -317,8 +334,10 @@ class _DashboardPageState extends State<DashboardPage> {
               DashboardPage.valorantWhite.withValues(alpha: 0.5),
           type: BottomNavigationBarType.fixed,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'FAVORITES'),
-            BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: 'MERCH'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.favorite), label: 'FAVORITES'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.shopping_bag), label: 'MERCH'),
             BottomNavigationBarItem(icon: Icon(Icons.person), label: 'PROFILE'),
             BottomNavigationBarItem(icon: Icon(Icons.notes), label: 'FEEDBACK'),
             BottomNavigationBarItem(icon: Icon(Icons.logout), label: 'LOGOUT'),
@@ -386,8 +405,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   flex: 1,
                   child: Container(
                     alignment: Alignment.center,
-                    color:
-                        DashboardPage.valorantCard.withValues(alpha: 0.85),
+                    color: DashboardPage.valorantCard.withValues(alpha: 0.85),
                     child: Text(
                       (tier['tierName'] as String? ?? '').toUpperCase(),
                       style: const TextStyle(
@@ -452,7 +470,8 @@ class _ValorantTimeDisplayState extends State<ValorantTimeDisplay> {
       padding: const EdgeInsets.only(top: 4, bottom: 4),
       child: Row(
         children: [
-          const Icon(Icons.access_time, color: DashboardPage.valorantPink, size: 14),
+          const Icon(Icons.access_time,
+              color: DashboardPage.valorantPink, size: 14),
           const SizedBox(width: 6),
           Expanded(
             child: SingleChildScrollView(
